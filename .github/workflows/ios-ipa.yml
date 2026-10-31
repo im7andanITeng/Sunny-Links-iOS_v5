@@ -11,12 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Find the game folder
+      - name: Get the game files
         run: |
           pkg=$(find . -maxdepth 6 -name package.json -not -path '*/node_modules/*' -exec grep -l '"build:cap"' {} + | head -n 1)
           if [ -z "$pkg" ]; then
-            echo "GAME NOT FOUND. These are the files in the repo:"
-            find . -maxdepth 4 -not -path './.git/*' | head -n 200
+            echo "Game files not in repo - downloading them..."
+            curl -fsSL -H "apikey: sb_publishable_kbm-sNpJhW67FPNM7Cnwaw_QRWRRENx" \
+              -o game.zip "https://hffbxfgtptjebzwjjlwp.supabase.co/storage/v1/object/authenticated/game-builds/sunny-links.zip"
+            unzip -q game.zip -d game-download
+            pkg=$(find game-download -maxdepth 6 -name package.json -not -path '*/node_modules/*' -exec grep -l '"build:cap"' {} + | head -n 1)
+          fi
+          if [ -z "$pkg" ]; then
+            echo "GAME NOT FOUND"
             exit 1
           fi
           dir=$(cd "$(dirname "$pkg")" && pwd)
